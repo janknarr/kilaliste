@@ -115,9 +115,7 @@
         logParts.push(`Joker aufgehoben: ${frozenNames.join(", ")}`);
       }
 
-      // Move home people to end, give applause if not position 0
-      // We need to know their original index before removal
-      // Process in reverse index order to keep indices stable during splice
+      // Move home people to end
       const homeIndices = people
         .map((p, i) => ({ p, i }))
         .filter(({ p }) => p.home)
@@ -127,21 +125,21 @@
       const moved = [];
       homeIndices.forEach(i => {
         const [person] = people.splice(i, 1);
-        person.home = false;
-        moved.unshift(person); // restore original order
+        moved.unshift(person);
       });
 
-      // Determine volunteers (were not at position 0 before commit)
-      // Since we removed them, just give applause to all home people
-      // who weren't the very first in the original list
       const firstActiveOriginal = prev.find(p => !p.frozen);
       moved.forEach(person => {
         const wasFirst = firstActiveOriginal && firstActiveOriginal.name === person.name;
-        if (!wasFirst) {
-          person.applause = (person.applause || 0) + 1;
-          logParts.push(`👏 ${person.name} freiwillig eingesprungen (${person.applause}×)`);
-        } else {
+        const isStar = person.home === "star";
+        person.home = false;
+        if (isStar && !wasFirst) {
+          person.stars = (person.stars || 0) + 1;
+          logParts.push(`⭐ ${person.name} eingesprungen (${person.stars}×)`);
+        } else if (wasFirst) {
           logParts.push(`${person.name} hat Slot übernommen`);
+        } else {
+          logParts.push(`${person.name} zu Hause geblieben`);
         }
         people.push(person);
       });
@@ -236,26 +234,62 @@
           + (isNext ? " next-up" : "")
           + (isFrozen ? " frozen" : "");
 
-        // House checkbox – mark "child stays home today"
-        const checkWrap = document.createElement("label");
-        checkWrap.className = "check-wrap";
-        checkWrap.title = isFrozen ? "Joker aktiv – wartet" : "Kind bleibt heute zu Hause";
+        // Two checkboxes: 🏠 home, 🏠⭐ home + volunteer
+        const checkboxGroup = document.createElement("div");
+        checkboxGroup.className = "checkbox-group";
 
-        const cb = document.createElement("input");
-        cb.type = "checkbox";
-        cb.className = "visually-hidden";
-        cb.checked = !!person.home;
-        cb.disabled = isFrozen;
-        cb.onchange = () => toggleHome(people, idx);
+        if (isFrozen) {
+          // Just show frozen indicator
+          const frozenWrap = document.createElement("label");
+          frozenWrap.className = "check-wrap";
+          const frozenCb = document.createElement("input");
+          frozenCb.type = "checkbox"; frozenCb.className = "visually-hidden"; frozenCb.disabled = true;
+          const frozenBox = document.createElement("span");
+          frozenBox.className = "custom-check frozen-check";
+          frozenBox.innerHTML = `<span class="snowflake">❄️</span>`;
+          frozenWrap.appendChild(frozenCb);
+          frozenWrap.appendChild(frozenBox);
+          checkboxGroup.appendChild(frozenWrap);
+        } else {
+          // 🏠 checkbox
+          const homeWrap = document.createElement("label");
+          homeWrap.className = "check-wrap";
+          homeWrap.title = "Kind bleibt zu Hause";
+          const homeCb = document.createElement("input");
+          homeCb.type = "checkbox"; homeCb.className = "visually-hidden";
+          homeCb.checked = person.home === "home" || person.home === "star";
+          homeCb.onchange = () => {
+            if (homeCb.checked) { people[idx].home = "home"; }
+            else { people[idx].home = false; starCb.checked = false; }
+            savePeople(people);
+          };
+          const homeBox = document.createElement("span");
+          homeBox.className = "custom-check" + (person.home ? " checked-home" : "");
+          homeBox.innerHTML = `<span class="house-icon">🏠</span>`;
+          homeWrap.appendChild(homeCb);
+          homeWrap.appendChild(homeBox);
 
-        const checkBox = document.createElement("span");
-        checkBox.className = "custom-check" + (isFrozen ? " frozen-check" : "") + (person.home ? " checked-home" : "");
-        checkBox.innerHTML = isFrozen
-          ? `<span class="snowflake">❄️</span>`
-          : `<span class="house-icon">🏠</span>`;
+          // 🏠⭐ checkbox
+          const starWrap = document.createElement("label");
+          starWrap.className = "check-wrap";
+          starWrap.title = "Kind zu Hause + eingesprungen";
+          const starCb = document.createElement("input");
+          starCb.type = "checkbox"; starCb.className = "visually-hidden";
+          starCb.checked = person.home === "star";
+          starCb.onchange = () => {
+            if (starCb.checked) { people[idx].home = "star"; homeCb.checked = true; }
+            else { people[idx].home = "home"; }
+            savePeople(people);
+          };
+          const starBox = document.createElement("span");
+          starBox.className = "custom-check" + (person.home === "star" ? " checked-star" : "");
+          starBox.innerHTML = `<span class="house-icon">🏠⭐</span>`;
+          starWrap.appendChild(starCb);
+          starWrap.appendChild(starBox);
 
-        checkWrap.appendChild(cb);
-        checkWrap.appendChild(checkBox);
+          checkboxGroup.appendChild(homeWrap);
+          checkboxGroup.appendChild(starWrap);
+        }
 
         // Badge
         const badge = document.createElement("span");
@@ -290,13 +324,13 @@
           jokers.appendChild(pip);
         }
 
-        // Applause icons
+        // Star icons (earned by volunteering)
         const applause = document.createElement("span");
         applause.className = "applause";
-        if (person.applause && person.applause > 0) {
-          applause.title = `${person.applause}× freiwillig eingesprungen`;
-          const count = person.applause;
-          applause.textContent = "👏".repeat(Math.min(count, 5));
+        if (person.stars && person.stars > 0) {
+          applause.title = `${person.stars}× eingesprungen`;
+          const count = person.stars;
+          applause.textContent = "⭐".repeat(Math.min(count, 5));
           if (count > 5) {
             const sup = document.createElement("sup");
             sup.className = "applause-count";
@@ -320,7 +354,7 @@
         removeBtn.textContent = "×";
         removeBtn.onclick = () => removePerson(people, idx);
 
-        li.appendChild(checkWrap);
+        li.appendChild(checkboxGroup);
         li.appendChild(badge);
         li.appendChild(name);
         li.appendChild(jokers);
@@ -557,25 +591,44 @@
 
     .house-icon { font-size: .85rem; line-height: 1; }
 
+    .checkbox-group {
+      display: flex;
+      gap: .3rem;
+      flex-shrink: 0;
+    }
+
     .custom-check.checked-home {
-      background: #fafff0;
+      background: #c8ffb0;
       border-color: #0a0a0a;
     }
 
-    input:checked + .custom-check.checked-home {
-      background: #c8ffb0;
+    .custom-check.checked-star {
+      background: #fff3a0;
+      border-color: #0a0a0a;
+    }
+
+    input:checked + .custom-check {
       border-color: #0a0a0a;
     }
 
     /* ── Commit row ─────────────────────────────────── */
 
     .commit-row {
-      max-width: 560px;
-      margin: 0 auto 1rem;
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      max-width: 100%;
+      padding: .6rem 1rem;
+      background: #fafff0;
+      border-bottom: 2px solid #0a0a0a;
+      margin-bottom: .75rem;
     }
 
     .commit-row button {
+      display: block;
       width: 100%;
+      max-width: 560px;
+      margin: 0 auto;
       background: #0a0a0a;
       color: #fafff0;
       border: 2px solid #0a0a0a;
@@ -650,9 +703,9 @@
 
     /* ── Jokers ─────────────────────────────────────── */
 
-    .jokers { display: flex; gap: .15rem; font-size: .9rem; }
-    .joker-pip { opacity: .15; line-height: 1; }
-    .joker-pip.filled { opacity: 1; }
+    .jokers { display: flex; gap: .2rem; font-size: 1.2rem; }
+    .joker-pip { opacity: .2; line-height: 1; filter: grayscale(1); }
+    .joker-pip.filled { opacity: 1; filter: none; }
 
     .applause {
       font-size: .85rem;
@@ -815,13 +868,13 @@
     <button class="btn-reset" id="reset-btn">🃏 Halbjahres-Reset</button>
   </header>
 
-  <ul id="list">
-    <li class="empty">Firebase verbinden um loszulegen…</li>
-  </ul>
-
   <div class="commit-row">
     <button id="commit-btn">✓ Tag abschließen</button>
   </div>
+
+  <ul id="list">
+    <li class="empty">Firebase verbinden um loszulegen…</li>
+  </ul>
 
   <div class="add-row">
     <input id="new-name" type="text" placeholder="Name hinzufügen…" />
