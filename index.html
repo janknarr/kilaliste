@@ -246,7 +246,7 @@
           frozenCb.type = "checkbox"; frozenCb.className = "visually-hidden"; frozenCb.disabled = true;
           const frozenBox = document.createElement("span");
           frozenBox.className = "custom-check frozen-check";
-          frozenBox.innerHTML = `<span class="snowflake">❄️</span>`;
+          frozenBox.textContent = "❄️";
           frozenWrap.appendChild(frozenCb);
           frozenWrap.appendChild(frozenBox);
           checkboxGroup.appendChild(frozenWrap);
@@ -265,9 +265,13 @@
           };
           const homeBox = document.createElement("span");
           homeBox.className = "custom-check" + (person.home ? " checked-home" : "");
-          homeBox.innerHTML = `<span class="house-icon">🏠</span>`;
+          homeBox.textContent = "🏠";
           homeWrap.appendChild(homeCb);
           homeWrap.appendChild(homeBox);
+          const homeLabel = document.createElement("span");
+          homeLabel.className = "check-label";
+          homeLabel.textContent = "zu Hause";
+          homeWrap.appendChild(homeLabel);
 
           // 🏠⭐ checkbox
           const starWrap = document.createElement("label");
@@ -283,9 +287,13 @@
           };
           const starBox = document.createElement("span");
           starBox.className = "custom-check" + (person.home === "star" ? " checked-star" : "");
-          starBox.innerHTML = `<span class="house-icon">🏠⭐</span>`;
+          starBox.textContent = "🏠⭐";
           starWrap.appendChild(starCb);
           starWrap.appendChild(starBox);
+          const starLabel = document.createElement("span");
+          starLabel.className = "check-label";
+          starLabel.textContent = "eingespr.";
+          starWrap.appendChild(starLabel);
 
           checkboxGroup.appendChild(homeWrap);
           checkboxGroup.appendChild(starWrap);
@@ -476,7 +484,7 @@
 
     .subtitle {
       margin-top: .35rem;
-      color: var(--muted);
+      color: #0a0a0a;
       font-size: .85rem;
     }
 
@@ -545,7 +553,7 @@
 
     .empty {
       text-align: center;
-      color: var(--muted);
+      color: #0a0a0a;
       padding: 2rem;
       font-size: .85rem;
     }
@@ -593,8 +601,24 @@
 
     .checkbox-group {
       display: flex;
-      gap: .3rem;
+      gap: .4rem;
       flex-shrink: 0;
+      align-items: center;
+    }
+
+    .check-wrap {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: .15rem;
+    }
+
+    .check-label {
+      font-size: .6rem;
+      font-weight: 600;
+      color: #0a0a0a;
+      white-space: nowrap;
+      letter-spacing: -.01em;
     }
 
     .custom-check.checked-home {
@@ -636,7 +660,7 @@
       padding: .75rem 1.2rem;
       font-family: "DM Sans", sans-serif;
       font-weight: 700;
-      font-size: 1rem;
+      font-size: .85rem;
       cursor: pointer;
       letter-spacing: .02em;
       box-shadow: 3px 3px 0 #6600aa;
@@ -659,7 +683,7 @@
       width: 1.6rem; height: 1.6rem;
       border-radius: 50%;
       background: var(--border);
-      color: var(--muted);
+      color: #0a0a0a;
       font-size: .72rem;
       font-weight: 600;
       display: flex; align-items: center; justify-content: center;
@@ -742,8 +766,8 @@
 
     .btn-remove {
       background: transparent;
-      color: var(--muted);
-      font-size: 1rem;
+      color: #0a0a0a;
+      font-size: .85rem;
       padding: .2rem .5rem;
     }
 
@@ -813,7 +837,7 @@
     .log-header span {
       font-family: 'DM Sans', sans-serif;
       font-size: .75rem;
-      color: var(--muted);
+      color: #0a0a0a;
       font-weight: 400;
     }
 
@@ -838,13 +862,13 @@
     .log-text { flex: 1; line-height: 1.4; }
 
     .log-time {
-      color: var(--muted);
+      color: #0a0a0a;
       font-size: .75rem;
       margin-right: .4rem;
     }
 
     .log-empty {
-      color: var(--muted);
+      color: #0a0a0a;
       font-size: .82rem;
       padding: .5rem 0;
     }
