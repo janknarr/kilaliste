@@ -4,7 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Kita Rotationsliste</title>
-  <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=DM+Sans:wght@400;500;600&display=swap" rel="stylesheet"/>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700;800;900&display=swap" rel="stylesheet"/>
 
   <!-- ███████████████████████████████████████████████
        1. FIREBASE CONFIG – ersetze mit deinen Werten
@@ -108,11 +108,16 @@
 
       const logParts = [];
 
-      // Unfreeze all frozen
+      // Unfreeze all frozen, deduct joker
       const frozenNames = people.filter(p => p.frozen).map(p => p.name);
       if (frozenNames.length) {
-        people.forEach(p => { p.frozen = false; });
-        logParts.push(`Joker aufgehoben: ${frozenNames.join(", ")}`);
+        people.forEach(p => {
+          if (p.frozen) {
+            p.jokers = Math.max((p.jokers || 0) - 1, 0);
+            p.frozen = false;
+          }
+        });
+        logParts.push(`Joker eingesetzt: ${frozenNames.join(", ")}`);
       }
 
       // Move home people to end
@@ -232,72 +237,66 @@
         const li = document.createElement("li");
         li.className = "person-row"
           + (isNext ? " next-up" : "")
-          + (isFrozen ? " frozen" : "");
+;
 
-        // Two checkboxes: 🏠 home, 🏠⭐ home + volunteer
+        // Three mutually exclusive options: home, star, joker
+        // Selection stored in person.selection: false | "home" | "star" | "joker"
         const checkboxGroup = document.createElement("div");
         checkboxGroup.className = "checkbox-group";
 
-        if (isFrozen) {
-          // Just show frozen indicator
-          const frozenWrap = document.createElement("label");
-          frozenWrap.className = "check-wrap";
-          const frozenCb = document.createElement("input");
-          frozenCb.type = "checkbox"; frozenCb.className = "visually-hidden"; frozenCb.disabled = true;
-          const frozenBox = document.createElement("span");
-          frozenBox.className = "custom-check frozen-check";
-          frozenBox.textContent = "❄️";
-          frozenWrap.appendChild(frozenCb);
-          frozenWrap.appendChild(frozenBox);
-          checkboxGroup.appendChild(frozenWrap);
-        } else {
-          // 🏠 checkbox
-          const homeWrap = document.createElement("label");
-          homeWrap.className = "check-wrap";
-          homeWrap.title = "Kind bleibt zu Hause";
-          const homeCb = document.createElement("input");
-          homeCb.type = "checkbox"; homeCb.className = "visually-hidden";
-          homeCb.checked = person.home === "home" || person.home === "star";
-          homeCb.onchange = () => {
-            if (homeCb.checked) { people[idx].home = "home"; }
-            else { people[idx].home = false; starCb.checked = false; }
-            savePeople(people);
-          };
-          const homeBox = document.createElement("span");
-          homeBox.className = "custom-check" + (person.home ? " checked-home" : "");
-          homeBox.textContent = "🏠";
-          homeWrap.appendChild(homeCb);
-          homeWrap.appendChild(homeBox);
-          const homeLabel = document.createElement("span");
-          homeLabel.className = "check-label";
-          homeLabel.textContent = "zu Hause";
-          homeWrap.appendChild(homeLabel);
-
-          // 🏠⭐ checkbox
-          const starWrap = document.createElement("label");
-          starWrap.className = "check-wrap";
-          starWrap.title = "Kind zu Hause + eingesprungen";
-          const starCb = document.createElement("input");
-          starCb.type = "checkbox"; starCb.className = "visually-hidden";
-          starCb.checked = person.home === "star";
-          starCb.onchange = () => {
-            if (starCb.checked) { people[idx].home = "star"; homeCb.checked = true; }
-            else { people[idx].home = "home"; }
-            savePeople(people);
-          };
-          const starBox = document.createElement("span");
-          starBox.className = "custom-check" + (person.home === "star" ? " checked-star" : "");
-          starBox.textContent = "🏠⭐";
-          starWrap.appendChild(starCb);
-          starWrap.appendChild(starBox);
-          const starLabel = document.createElement("span");
-          starLabel.className = "check-label";
-          starLabel.textContent = "eingespr.";
-          starWrap.appendChild(starLabel);
-
-          checkboxGroup.appendChild(homeWrap);
-          checkboxGroup.appendChild(starWrap);
+        function setSelection(val) {
+          people[idx].home = (val === "home" || val === "star") ? val : false;
+          people[idx].frozen = val === "joker";
+          if (val !== "joker" && val !== people[idx].home) {
+            // restore joker count if unselecting joker
+          }
+          savePeople(people);
         }
+
+        const currentSel = isFrozen ? "joker" : (person.home || false);
+
+        // 🏠 home
+        const homeIcon = document.createElement("span");
+        homeIcon.className = "cb-icon";
+        homeIcon.textContent = "🏠";
+
+        const homeWrap = document.createElement("label");
+        homeWrap.className = "check-wrap";
+        homeWrap.title = "Kind bleibt zu Hause";
+        const homeCb = document.createElement("input");
+        homeCb.type = "checkbox"; homeCb.className = "visually-hidden";
+        homeCb.checked = currentSel === "home";
+        homeCb.onchange = () => {
+          setSelection(homeCb.checked ? "home" : false);
+        };
+        const homeBox = document.createElement("span");
+        homeBox.className = "custom-check";
+        homeWrap.appendChild(homeCb);
+        homeWrap.appendChild(homeBox);
+
+        // ⭐🏠 star
+        const starIcon = document.createElement("span");
+        starIcon.className = "cb-icon";
+        starIcon.textContent = "⭐🏠";
+
+        const starWrap = document.createElement("label");
+        starWrap.className = "check-wrap";
+        starWrap.title = "Kind zu Hause + eingesprungen";
+        const starCb = document.createElement("input");
+        starCb.type = "checkbox"; starCb.className = "visually-hidden";
+        starCb.checked = currentSel === "star";
+        starCb.onchange = () => {
+          setSelection(starCb.checked ? "star" : false);
+        };
+        const starBox = document.createElement("span");
+        starBox.className = "custom-check";
+        starWrap.appendChild(starCb);
+        starWrap.appendChild(starBox);
+
+        checkboxGroup.appendChild(homeIcon);
+        checkboxGroup.appendChild(homeWrap);
+        checkboxGroup.appendChild(starIcon);
+        checkboxGroup.appendChild(starWrap);
 
         // Badge
         const badge = document.createElement("span");
@@ -314,23 +313,11 @@
           tag.textContent = "dran";
           name.appendChild(tag);
         }
-        if (isFrozen) {
-          const tag = document.createElement("span");
-          tag.className = "frozen-tag";
-          tag.textContent = "Joker aktiv";
-          name.appendChild(tag);
-        }
 
-        // Joker pips
+
+        // joker pips removed
         const jokers = document.createElement("span");
         jokers.className = "jokers";
-        jokers.title = `${person.jokers} Joker übrig`;
-        for (let j = 0; j < 2; j++) {
-          const pip = document.createElement("span");
-          pip.className = "joker-pip" + (j < person.jokers ? " filled" : "");
-          pip.textContent = "🃏";
-          jokers.appendChild(pip);
-        }
 
         // Star icons (earned by volunteering)
         const applause = document.createElement("span");
@@ -347,13 +334,38 @@
           }
         }
 
-        // Joker button
-        const jokerBtn = document.createElement("button");
-        jokerBtn.className = "btn btn-joker";
-        jokerBtn.title = "Joker: einfrieren, andere rücken vor";
-        jokerBtn.textContent = "Joker";
-        jokerBtn.disabled = person.jokers <= 0 || isFrozen;
-        jokerBtn.onclick = () => useJoker(people, idx);
+        // Joker checkbox
+        const jokerWrap = document.createElement("label");
+        jokerWrap.className = "check-wrap";
+        jokerWrap.title = "Joker einsetzen: einfrieren";
+
+        const jokerCb = document.createElement("input");
+        jokerCb.type = "checkbox";
+        jokerCb.className = "visually-hidden";
+        jokerCb.disabled = person.jokers <= 0;
+        jokerCb.checked = isFrozen;
+        jokerCb.onchange = () => {
+          if (jokerCb.checked) {
+            people[idx].home = false;
+            people[idx].frozen = true;
+            savePeople(people);
+          } else {
+            people[idx].frozen = false;
+            savePeople(people);
+          }
+        };
+
+        const jokerBox = document.createElement("span");
+        jokerBox.className = "custom-check joker-check" + (isFrozen ? " is-frozen" : "");
+
+        const jokerIcon = document.createElement("span");
+        jokerIcon.className = "joker-label";
+        jokerIcon.textContent = "Joker nutzen";
+
+        jokerWrap.appendChild(jokerCb);
+        jokerWrap.appendChild(jokerBox);
+
+        const jokerBtn = jokerWrap; // alias for appendChild below
 
         // Remove
         const removeBtn = document.createElement("button");
@@ -367,7 +379,10 @@
         li.appendChild(name);
         li.appendChild(jokers);
         li.appendChild(applause);
-        li.appendChild(jokerBtn);
+        if (person.jokers > 0 || isFrozen) {
+          li.appendChild(jokerIcon);
+          li.appendChild(jokerBtn);
+        }
         li.appendChild(removeBtn);
         ul.appendChild(li);
       });
@@ -384,7 +399,7 @@
         return;
       }
 
-      const sorted = [...entries].reverse().slice(0, 20);
+      const sorted = [...entries].reverse().slice(0, 10);
 
       sorted.forEach((entry, idx) => {
         const row = document.createElement("div");
@@ -472,12 +487,21 @@
       gap: 1rem;
     }
 
+    .header-right {
+      display: flex;
+      flex-direction: column;
+      gap: .5rem;
+      flex-shrink: 0;
+      margin-top: .25rem;
+    }
+
     .header-left h1 {
-      font-family: 'DM Serif Display', serif;
+      font-family: 'DM Sans', sans-serif;
       font-size: clamp(2.2rem, 6vw, 3rem);
+      font-weight: 900;
       line-height: 1;
       color: #6600aa;
-      letter-spacing: -.01em;
+      letter-spacing: -.02em;
     }
 
     .header-left h1 span { color: #6600aa; }
@@ -488,26 +512,64 @@
       font-size: .85rem;
     }
 
+
+
+
     .btn-reset {
       background: #f4ff6e;
-      color: #080808;
-      border: none;
-      border-radius: var(--radius);
-      padding: .5rem .9rem;
+      color: #0a0a0a;
+      border: 2px solid #0a0a0a;
+      border-radius: 999px;
+      padding: .5rem 1rem;
       font-family: 'DM Sans', sans-serif;
       font-size: .78rem;
-      font-weight: 600;
+      font-weight: 700;
       cursor: pointer;
       white-space: nowrap;
-      margin-top: .25rem;
-      transition: opacity .15s;
-      flex-shrink: 0;
+      width: 100%;
+      box-shadow: 3px 3px 0 #0a0a0a;
+      transition: transform .1s, box-shadow .1s;
     }
 
     .btn-reset:hover {
       transform: translate(-1px, -1px);
       box-shadow: 4px 4px 0 #0a0a0a;
-      opacity: 1;
+    }
+
+    .btn-commit {
+      background: #0a0a0a;
+      color: #fafff0;
+      border: 2px solid #0a0a0a;
+      border-radius: 999px;
+      padding: .5rem 1rem;
+      font-family: 'DM Sans', sans-serif;
+      font-size: .78rem;
+      font-weight: 700;
+      cursor: pointer;
+      white-space: nowrap;
+      width: 100%;
+      box-shadow: 3px 3px 0 #6600aa;
+      transition: transform .1s, box-shadow .1s;
+    }
+
+    .btn-commit:hover {
+      transform: translate(-1px, -1px);
+      box-shadow: 4px 4px 0 #6600aa;
+    }
+
+    .person-row.frozen {
+      border-color: #aaaaaa;
+      background: #e8e8e8;
+      box-shadow: 3px 3px 0 #aaaaaa;
+    }
+
+    .person-row.frozen .name {
+      color: #666666;
+    }
+
+    .person-row.frozen .badge {
+      background: #aaaaaa;
+      color: #fff;
     }
 
     /* ── List ───────────────────────────────────────── */
@@ -544,12 +606,7 @@
       box-shadow: 3px 3px 0 #6600aa;
     }
 
-    .person-row.frozen {
-      border-color: #0055ff;
-      background: #d0e4ff;
-      box-shadow: 3px 3px 0 #0055ff;
-      opacity: 1;
-    }
+
 
     .empty {
       text-align: center;
@@ -581,19 +638,27 @@
     }
 
     .custom-check svg { width: 12px; height: 10px; }
-    .check-wrap:hover .custom-check:not(.frozen-check) { border-color: var(--active); }
 
     input:checked + .custom-check {
-      background: var(--active);
-      border-color: var(--active);
-      color: #fff;
+      background: #ffffff;
+      border-color: #0a0a0a;
     }
 
-    .frozen-check {
-      border-color: #0055ff;
-      background: #d0e4ff;
-      cursor: not-allowed;
+    input:checked + .custom-check::after {
+      content: "";
+      display: block;
+      width: 9px;
+      height: 6px;
+      border-left: 2.5px solid #0a0a0a;
+      border-bottom: 2.5px solid #0a0a0a;
+      transform: rotate(-45deg) translate(1px, -1px);
     }
+
+    .check-wrap:hover .custom-check:not(.frozen-check) { border-color: var(--active); }
+
+    
+
+
 
     .snowflake { font-size: .85rem; line-height: 1; }
 
@@ -601,24 +666,20 @@
 
     .checkbox-group {
       display: flex;
-      gap: .4rem;
+      gap: .25rem;
       flex-shrink: 0;
       align-items: center;
     }
 
     .check-wrap {
       display: flex;
-      flex-direction: column;
       align-items: center;
-      gap: .15rem;
     }
 
-    .check-label {
-      font-size: .6rem;
-      font-weight: 600;
-      color: #0a0a0a;
-      white-space: nowrap;
-      letter-spacing: -.01em;
+    .cb-icon {
+      font-size: .95rem;
+      line-height: 1;
+      flex-shrink: 0;
     }
 
     .custom-check.checked-home {
@@ -631,58 +692,18 @@
       border-color: #0a0a0a;
     }
 
-    input:checked + .custom-check {
-      border-color: #0a0a0a;
-    }
+    
 
     /* ── Commit row ─────────────────────────────────── */
 
-    .commit-row {
-      position: sticky;
-      top: 0;
-      z-index: 100;
-      max-width: 100%;
-      padding: .6rem 1rem;
-      background: #fafff0;
-      border-bottom: 2px solid #0a0a0a;
-      margin-bottom: .75rem;
-    }
 
-    .commit-row button {
-      display: block;
-      width: 100%;
-      max-width: 560px;
-      margin: 0 auto;
-      background: #0a0a0a;
-      color: #fafff0;
-      border: 2px solid #0a0a0a;
-      border-radius: var(--radius);
-      padding: .75rem 1.2rem;
-      font-family: "DM Sans", sans-serif;
-      font-weight: 700;
-      font-size: .85rem;
-      cursor: pointer;
-      letter-spacing: .02em;
-      box-shadow: 3px 3px 0 #6600aa;
-      transition: box-shadow .1s, transform .1s;
-    }
-
-    .commit-row button:hover {
-      transform: translate(-1px, -1px);
-      box-shadow: 4px 4px 0 #6600aa;
-    }
-
-    .commit-row button:active {
-      transform: translate(1px, 1px);
-      box-shadow: 1px 1px 0 #6600aa;
-    }
 
     /* ── Badge & name ───────────────────────────────── */
 
     .badge {
       width: 1.6rem; height: 1.6rem;
       border-radius: 50%;
-      background: var(--border);
+      background: #e0e0d8;
       color: #0a0a0a;
       font-size: .72rem;
       font-weight: 600;
@@ -691,12 +712,12 @@
     }
 
     .next-up .badge { background: var(--active); color: #fff; }
-    .frozen .badge  { background: var(--frozen);  color: #fff; }
+
 
     .name {
       flex: 1;
       font-weight: 500;
-      font-size: .97rem;
+      font-size: 1.2rem;
       display: flex;
       align-items: center;
       gap: .5rem;
@@ -762,7 +783,25 @@
 
     .btn:active { transform: scale(.95); }
     .btn:disabled { opacity: .25; cursor: not-allowed; }
-    .btn-joker { background: #f4ff6e; color: #080808; }
+    .btn-joker { display: none; } /* replaced by checkbox */
+
+    .joker-label {
+      font-size: .75rem;
+      font-weight: 600;
+      color: #0a0a0a;
+      white-space: nowrap;
+    }
+
+    .joker-check {
+      background: #ffffff;
+    }
+
+
+
+    input:checked + .joker-check {
+      background: #f4ff6e;
+      border-color: #0a0a0a;
+    }
 
     .btn-remove {
       background: transparent;
@@ -788,7 +827,7 @@
       border-radius: var(--radius);
       padding: .6rem .9rem;
       font-family: 'DM Sans', sans-serif;
-      font-size: .97rem;
+      font-size: 1.2rem;
       background: var(--surface);
       color: var(--ink);
       outline: none;
@@ -806,7 +845,7 @@
       padding: .6rem 1.1rem;
       font-family: 'DM Sans', sans-serif;
       font-weight: 700;
-      font-size: .97rem;
+      font-size: 1.2rem;
       cursor: pointer;
       box-shadow: 3px 3px 0 #0a0a0a;
       transition: box-shadow .1s, transform .1s;
@@ -825,7 +864,7 @@
     }
 
     .log-header {
-      font-family: 'DM Serif Display', serif;
+      font-family: 'DM Sans', sans-serif;
       font-size: 1.3rem;
       color: #6600aa;
       margin-bottom: .75rem;
@@ -889,12 +928,11 @@
       <h1>Kita <span>Rotation</span></h1>
       <p class="subtitle">Wer ist dran? — live für alle</p>
     </div>
-    <button class="btn-reset" id="reset-btn">🃏 Halbjahres-Reset</button>
+    <div class="header-right">
+      <button class="btn-reset" id="reset-btn">Joker Halbjahres-Reset</button>
+      <button class="btn-commit" id="commit-btn">✓  Liste updaten</button>
+    </div>
   </header>
-
-  <div class="commit-row">
-    <button id="commit-btn">✓ Tag abschließen</button>
-  </div>
 
   <ul id="list">
     <li class="empty">Firebase verbinden um loszulegen…</li>
@@ -907,7 +945,7 @@
 
   <div class="log-section">
     <div class="log-header">
-      Änderungsprotokoll <span>max. 20 Einträge · neueste zuerst</span>
+      Änderungsprotokoll <span>max. 10 Einträge · neueste zuerst</span>
     </div>
     <div id="log-entries"></div>
   </div>
