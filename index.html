@@ -481,7 +481,7 @@
 
     header {
       max-width: 560px;
-      margin: 0 auto 2rem;
+      margin: 0 auto 2.5rem;
       display: flex;
       align-items: flex-start;
       justify-content: space-between;
@@ -508,9 +508,40 @@
     .header-left h1 span { color: #6600aa; }
 
     .subtitle {
-      margin-top: .35rem;
+      margin-top: .5rem;
+    }
+
+    .subtitle-lead {
+      font-size: 1.05rem;
+      font-weight: 900;
       color: #0a0a0a;
-      font-size: .85rem;
+      margin-bottom: .4rem;
+      padding-left: 0;
+    }
+
+    .subtitle-list {
+      list-style: none;
+      padding: 0 0 0 .75rem;
+      margin: 0;
+      display: flex;
+      flex-direction: column;
+      gap: .3rem;
+    }
+
+    .subtitle-list li {
+      font-size: .88rem;
+      color: #444433;
+      padding-left: 1.2rem;
+      position: relative;
+      line-height: 1.5;
+    }
+
+    .subtitle-list li::before {
+      content: "→";
+      position: absolute;
+      left: 0;
+      color: #6600aa;
+      font-weight: 700;
     }
 
 
@@ -928,7 +959,14 @@
   <header>
     <div class="header-left">
       <h1>Kita <span>Rotation</span></h1>
-      <p class="subtitle">Wer ist dran? — live für alle</p>
+      <div class="subtitle">
+        <p class="subtitle-lead">Wer ist dran? Live für alle:</p>
+        <ul class="subtitle-list">
+          <li>Absprechen und heldenhaft aufrücken</li>
+          <li>1× Joker ziehen wenn es gar nicht geht</li>
+          <li>Update klicken wenn alles eingetragen ist für den Tag</li>
+        </ul>
+      </div>
     </div>
     <div class="header-right">
       <button class="btn-reset" id="reset-btn">Joker Halbjahres-Reset</button>
