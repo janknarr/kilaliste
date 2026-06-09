@@ -285,6 +285,7 @@
         const starCb = document.createElement("input");
         starCb.type = "checkbox"; starCb.className = "visually-hidden";
         starCb.checked = currentSel === "star";
+        starCb.disabled = (idx === 0 && !isFrozen);
         starCb.onchange = () => {
           setSelection(starCb.checked ? "star" : false);
         };
@@ -753,9 +754,10 @@
     .joker-pip.filled { opacity: 1; filter: none; }
 
     .applause {
-      font-size: .85rem;
+      font-size: .6rem;
       line-height: 1;
       letter-spacing: -.05em;
+      opacity: .85;
     }
 
     .applause-count {
