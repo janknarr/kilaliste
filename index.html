@@ -361,7 +361,7 @@
 
         const jokerIcon = document.createElement("span");
         jokerIcon.className = "joker-label";
-        jokerIcon.textContent = "Joker nutzen";
+        jokerIcon.innerHTML = 'Joker <span class="joker-full">nutzen</span>';
 
         jokerWrap.appendChild(jokerCb);
         jokerWrap.appendChild(jokerBox);
@@ -396,9 +396,9 @@
         li.appendChild(checkboxGroup);
         li.appendChild(badge);
         li.appendChild(name);
-        li.appendChild(editBtn);
         li.appendChild(jokers);
         li.appendChild(applause);
+        li.appendChild(editBtn);
         if (person.jokers > 0 || isFrozen) {
           li.appendChild(jokerIcon);
           li.appendChild(jokerBtn);
@@ -476,7 +476,8 @@
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
-    html { background: #fafff0; }
+    html { background: #fafff0; overflow-x: hidden; }
+    body { overflow-x: hidden; }
 
     :root {
       --bg:      #fafff0;
@@ -496,15 +497,24 @@
       font-family: 'DM Sans', sans-serif;
       min-height: 100vh;
       padding: 2rem 1rem 4rem;
+      max-width: 680px;
+      margin-left: auto;
+      margin-right: auto;
+      box-sizing: border-box;
     }
 
     header {
-      max-width: 560px;
-      margin: 0 auto 2.5rem;
+      width: 100%;
+      margin: 0 0 0;
       display: flex;
       align-items: flex-start;
-      justify-content: space-between;
-      gap: 1rem;
+      justify-content: flex-start;
+      gap: .75rem;
+    }
+
+    .header-left {
+      flex: 1;
+      min-width: 0;
     }
 
     .header-right {
@@ -517,7 +527,7 @@
 
     .header-left h1 {
       font-family: 'DM Sans', sans-serif;
-      font-size: clamp(2.2rem, 6vw, 3rem);
+      font-size: clamp(2.4rem, 7vw, 3rem);
       font-weight: 900;
       line-height: 1;
       color: #6600aa;
@@ -527,7 +537,10 @@
     .header-left h1 span { color: #6600aa; }
 
     .subtitle {
-      margin-top: .5rem;
+      max-width: 560px;
+      width: 100%;
+      margin: 1rem auto 1.5rem;
+      padding: 0 1rem;
     }
 
     .subtitle-lead {
@@ -536,12 +549,13 @@
       color: #0a0a0a;
       margin-bottom: .4rem;
       padding-left: 0;
+      text-align: left;
     }
 
     .subtitle-list {
       list-style: none;
-      padding: 0 0 0 .75rem;
-      margin: 0;
+      padding: 0 0 0 0;
+      margin: 0 auto;
       display: flex;
       flex-direction: column;
       gap: .3rem;
@@ -627,8 +641,8 @@
 
     #list {
       list-style: none;
-      max-width: 560px;
-      margin: 0 auto 1.25rem;
+      max-width: 100%;
+      margin: 0 0 1.25rem;
       display: flex;
       flex-direction: column;
       gap: .45rem;
@@ -638,12 +652,13 @@
       background: var(--surface);
       border: 2px solid #0a0a0a;
       border-radius: var(--radius);
-      padding: .7rem .9rem;
+      padding: .5rem .6rem;
       display: flex;
       align-items: center;
-      gap: .6rem;
+      gap: .35rem;
       box-shadow: 3px 3px 0 #0a0a0a;
       transition: box-shadow .15s, transform .15s;
+      flex-wrap: nowrap;
     }
 
     .person-row:hover {
@@ -728,7 +743,7 @@
     }
 
     .cb-icon {
-      font-size: .95rem;
+      font-size: .8rem;
       line-height: 1;
       flex-shrink: 0;
     }
@@ -752,11 +767,11 @@
     /* ── Badge & name ───────────────────────────────── */
 
     .badge {
-      width: 1.6rem; height: 1.6rem;
+      width: 1.4rem; height: 1.4rem;
       border-radius: 50%;
       background: #e0e0d8;
       color: #0a0a0a;
-      font-size: .72rem;
+      font-size: .65rem;
       font-weight: 600;
       display: flex; align-items: center; justify-content: center;
       flex-shrink: 0;
@@ -768,22 +783,23 @@
     .name {
       flex: 1;
       font-weight: 500;
-      font-size: 1.2rem;
+      font-size: 1.1rem;
       display: flex;
       align-items: center;
-      gap: .5rem;
-      flex-wrap: wrap;
+      gap: .35rem;
+      min-width: 0;
     }
 
     .next-tag {
-      font-size: .68rem;
+      font-size: .65rem;
       font-weight: 600;
       background: color-mix(in srgb, var(--active) 12%, transparent);
       color: var(--active);
-      padding: .15rem .45rem;
+      padding: .1rem .35rem;
       border-radius: 20px;
       text-transform: uppercase;
-      letter-spacing: .05em;
+      letter-spacing: .04em;
+      flex-shrink: 0;
     }
 
     .frozen-tag {
@@ -838,7 +854,7 @@
     .btn-joker { display: none; } /* replaced by checkbox */
 
     .joker-label {
-      font-size: .75rem;
+      font-size: .65rem;
       font-weight: 600;
       color: #0a0a0a;
       white-space: nowrap;
@@ -877,8 +893,8 @@
     /* ── Add row ────────────────────────────────────── */
 
     .add-row {
-      max-width: 560px;
-      margin: 0 auto;
+      max-width: 100%;
+      margin: 0;
       display: flex;
       gap: .5rem;
     }
@@ -921,8 +937,8 @@
     /* ── Log ────────────────────────────────────────── */
 
     .log-section {
-      max-width: 560px;
-      margin: 2.5rem auto 0;
+      max-width: 100%;
+      margin: 2.5rem 0 0;
     }
 
     .log-header {
@@ -979,7 +995,38 @@
       color: #6600aa;
       white-space: nowrap;
       padding: .25rem .6rem;
-      font-size: .72rem;
+      font-size: .65rem;
+    }
+      .cb-icon { font-size: .8rem; }
+      .checkbox-group { gap: .2rem; }
+      .person-row { padding: .5rem .4rem; gap: .25rem; }
+      .badge { width: 1.4rem; height: 1.4rem; font-size: .65rem; }
+      .joker-label { font-size: .6rem; }
+      .btn-edit { padding: .1rem .2rem; }
+      .btn-remove { padding: .1rem .3rem; }
+    }
+
+    @media (max-width: 500px) {
+      .custom-check { width: 20px !important; height: 20px !important; }
+      .cb-icon { font-size: .75rem; }
+      .checkbox-group { gap: .15rem; }
+      .person-row { padding: .45rem .4rem; gap: .2rem; }
+      .badge { width: 1.3rem; height: 1.3rem; font-size: .6rem; }
+      .joker-label { font-size: .6rem; }
+      .name { font-size: 1rem; }
+      .btn-edit { padding: .1rem .15rem; }
+      .btn-remove { padding: .1rem .25rem; font-size: .9rem; }
+      .btn-reset, .btn-commit { font-size: .7rem; padding: .4rem .7rem; }
+    }
+
+    @media (max-width: 500px) {
+      body { padding: 1rem .75rem 3rem; }
+      .joker-full { display: none; }
+      .header-right { flex-shrink: 0; }
+      .btn-reset, .btn-commit { font-size: .65rem !important; padding: .4rem .6rem !important; width: auto; }
+      .person-row { padding: .4rem .5rem; gap: .3rem; }
+      .btn-remove { display: none; }
+      .btn-edit { display: none; }
     }
   </style>
 </head>
@@ -988,20 +1035,20 @@
   <header>
     <div class="header-left">
       <h1>Kita <span>Rotation</span></h1>
-      <div class="subtitle">
-        <p class="subtitle-lead">Wer ist dran? Live für alle:</p>
-        <ul class="subtitle-list">
-          <li>Absprechen und heldenhaft aufrücken</li>
-          <li>1× Joker ziehen wenn es gar nicht geht</li>
-          <li>Update klicken wenn alles eingetragen ist für den Tag</li>
-        </ul>
-      </div>
     </div>
     <div class="header-right">
       <button class="btn-reset" id="reset-btn">Joker Halbjahres-Reset</button>
       <button class="btn-commit" id="commit-btn">✓  Liste updaten</button>
     </div>
   </header>
+  <div class="subtitle">
+    <p class="subtitle-lead">Wer ist dran? Live für alle:</p>
+    <ul class="subtitle-list">
+      <li>Absprechen und heldenhaft aufrücken</li>
+      <li>1× Joker ziehen wenn es gar nicht geht</li>
+      <li>Update klicken wenn alles eingetragen ist für den Tag</li>
+    </ul>
+  </div>
 
   <ul id="list">
     <li class="empty">Firebase verbinden um loszulegen…</li>
