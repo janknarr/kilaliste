@@ -375,9 +375,28 @@
         removeBtn.textContent = "×";
         removeBtn.onclick = () => removePerson(people, idx);
 
+        // Edit button
+        const editBtn = document.createElement("button");
+        editBtn.className = "btn btn-edit";
+        editBtn.title = "Name bearbeiten";
+        editBtn.innerHTML = `<svg viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg" width="12" height="12"><path d="M11.5 2.5l2 2L5 13H3v-2L11.5 2.5z" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
+        editBtn.onclick = () => {
+          checkPin(() => {
+            const newName = prompt("Name ändern:", people[idx].name);
+            if (newName && newName.trim() && newName.trim() !== people[idx].name) {
+              const prev = JSON.parse(JSON.stringify(people));
+              const oldName = people[idx].name;
+              people[idx].name = newName.trim();
+              savePeople(people);
+              logAction(`"${oldName}" umbenannt zu "${newName.trim()}"`, prev);
+            }
+          });
+        };
+
         li.appendChild(checkboxGroup);
         li.appendChild(badge);
         li.appendChild(name);
+        li.appendChild(editBtn);
         li.appendChild(jokers);
         li.appendChild(applause);
         if (person.jokers > 0 || isFrozen) {
@@ -835,6 +854,16 @@
       background: #f4ff6e;
       border-color: #0a0a0a;
     }
+
+    .btn-edit {
+      background: transparent;
+      color: #aaaaaa;
+      padding: .2rem .3rem;
+      font-size: .75rem;
+      flex-shrink: 0;
+    }
+
+    .btn-edit:hover { color: #6600aa; }
 
     .btn-remove {
       background: transparent;
